@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Five9\Five9MessageController;
+
 use Illuminate\Support\Facades\Log;
 
 class MessengerController extends Controller
@@ -11,27 +13,64 @@ class MessengerController extends Controller
         $this->verifyAccess();
 
         $input = json_decode(file_get_contents('php://input'), true);
-        #$id = $input['entry'][0]['id'];
         $id = $input['entry'][0]['messaging'][0]['sender']['id'];
-        Log::debug($id);
         $message = $input['entry'][0]['messaging'][0]['message']['text'];
 
         $response = [
             'recipient' => ['id' => $id],
-            'message' => ['text' => 'Hello world!:)']
+            'message' => ['text' => $message]
         ];
 
         $this->sendMessage($response);
 
     }
 
-    public function index_post(Response $response) {
-        Log::debug('The system is down!');
-        return 'hola';
-    }
-
     protected function sendMessage($response) {
 
+        Log::debug('****************************************************************************************');
+        Log::debug('****************************************************************************************');
+        Log::debug('***************************** Messenger Vonage BEGIN ***********************************');
+        Log::debug('****************************************************************************************');
+        Log::debug('****************************************************************************************');
+
+        Log::debug("Request recibido");
+        Log::debug($response);
+
+        $fbMessUsrID = $response['recipient']['id'];
+        $message = $response['message']['text'];
+
+        //Envia mensaje al Dominio De movigoo
+        $tenant_name = "MoviGoo - Partner Domain";
+        $tenant_id = "131160";
+
+        Log::debug('****************************************************************************************');
+        Log::debug('****************************************************************************************');
+        Log::debug('******************************* Messege for Five9 **************************************');
+        Log::debug('****************************************************************************************');
+        Log::debug('****************************************************************************************');
+        Log::debug("Id Response");
+        Log::debug($fbMessUsrID);
+        Log::debug("Text Response");
+        Log::debug($message);
+
+        $five9 = new Five9MessageController($tenant_name, $tenant_id);
+        $session = $five9->get_session();
+
+        $interaction_data->api_url = $session->metadata->dataCenters[0]->apiUrls[0]->host;
+
+        Log::debug($interaction_data);
+
+
+        Log::debug($session);
+        
+        $five9_message->send_message(
+            $interaction->api_url,
+            $interaction->conversation_id,
+            $interaction->five9_farm_id,
+            $message
+        );
+
+        
         $ch = curl_init('https://graph.facebook.com/v2.6/me/messages?access_token=' . env("PAG_ACCESS_TOKEN"));
 
         curl_setopt($ch, CURLOPT_POST, 1);
