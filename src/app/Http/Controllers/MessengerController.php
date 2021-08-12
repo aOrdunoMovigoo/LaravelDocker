@@ -13,6 +13,7 @@ class MessengerController extends Controller
         $this->verifyAccess();
 
         $input = json_decode(file_get_contents('php://input'), true);
+        Log::debug($input);
         $id = $input['entry'][0]['messaging'][0]['sender']['id'];
         $message = $input['entry'][0]['messaging'][0]['message']['text'];
 
@@ -27,61 +28,35 @@ class MessengerController extends Controller
 
     protected function sendMessage($response) {
 
-        Log::debug('****************************************************************************************');
-        Log::debug('****************************************************************************************');
-        Log::debug('***************************** Messenger Vonage BEGIN ***********************************');
-        Log::debug('****************************************************************************************');
-        Log::debug('****************************************************************************************');
-
-        Log::debug("Request recibido");
-        Log::debug($response);
-
         $fbMessUsrID = $response['recipient']['id'];
         $message = $response['message']['text'];
+        $callback_url = "https://movigooapp.com/gateway/five9/senati/v1/senati/webhooks/whatsapps/";
 
         //Envia mensaje al Dominio De movigoo
         $tenant_name = "MoviGoo - Partner Domain";
         $tenant_id = "131160";
 
-        Log::debug('****************************************************************************************');
-        Log::debug('****************************************************************************************');
-        Log::debug('******************************* Messege for Five9 **************************************');
-        Log::debug('****************************************************************************************');
-        Log::debug('****************************************************************************************');
-        Log::debug("Id Response");
-        Log::debug($fbMessUsrID);
-        Log::debug("Text Response");
-        Log::debug($message);
-
         $five9 = new Five9MessageController($tenant_name, $tenant_id);
         $session = $five9->get_session();
 
+        $interaction_data = new \stdClass();
+        $interaction_data->callback_url = $callback_url;
+        $interaction_data->campaign_name = 'whatsapp_ventas';
+        $interaction_data->tenant_id = $tenant_id;
         $interaction_data->api_url = $session->metadata->dataCenters[0]->apiUrls[0]->host;
+        $interaction_data->phone_number = '+526141287721';
+        $interaction_data->five9_farm_id = $session->context->farmId;
 
-        Log::debug($interaction_data);
+        $conversation_data = $five9->create_chat_interaction($session, $interaction_data);
 
+        Log::debug($message);
 
-        Log::debug($session);
-        
-        $five9_message->send_message(
-            $interaction->api_url,
-            $interaction->conversation_id,
-            $interaction->five9_farm_id,
+        $five9->send_message(
+            $interaction_data->api_url,
+            $conversation_data->id,
+            $interaction_data->five9_farm_id,
             $message
         );
-
-        
-        $ch = curl_init('https://graph.facebook.com/v2.6/me/messages?access_token=' . env("PAG_ACCESS_TOKEN"));
-
-        curl_setopt($ch, CURLOPT_POST, 1);
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($response));
-
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-
-        curl_exec($ch);
-
-        curl_close($ch);
 
     }
 

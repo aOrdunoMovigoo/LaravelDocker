@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Five9;
 
 use App\Http\Controllers\Controller;
 use \Log;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Client;
 
 class Five9MessageController extends Controller
 {
@@ -12,7 +14,7 @@ class Five9MessageController extends Controller
         $this->tenant_name = $tenant_name;
         $this->tenant_id = $tenant_id;
 
-        // $this->httpClient = new \GuzzleHttp\Client();
+        $this->httpClient = new \GuzzleHttp\Client();
     }
 
     public function get_session()
