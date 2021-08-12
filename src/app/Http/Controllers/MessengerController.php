@@ -27,21 +27,26 @@ class MessengerController extends Controller
     }
 
     protected function sendMessage($response) {
-
-        $fbMessUsrID = $response['recipient']['id'];
-        $message = $response['message']['text'];
-        $callback_url = "https://movigooapp.com/gateway/five9/senati/v1/senati/webhooks/whatsapps/";
-
+        
         //Envia mensaje al Dominio De movigoo
         $tenant_name = "MoviGoo - Partner Domain";
         $tenant_id = "131160";
+        
+        $campaign_name = 'whatsapp_ventas';
+        $callback_url = "https://movigooapp.com/gateway/five9/senati/v1/senati/webhooks/whatsapps/";
+        $integration_id = 2; // five9
+
+
+        $fbMessUsrID = $response['recipient']['id'];
+        $message = $response['message']['text'];
+
 
         $five9 = new Five9MessageController($tenant_name, $tenant_id);
         $session = $five9->get_session();
 
         $interaction_data = new \stdClass();
         $interaction_data->callback_url = $callback_url;
-        $interaction_data->campaign_name = 'whatsapp_ventas';
+        $interaction_data->campaign_name = $campaign_name;
         $interaction_data->tenant_id = $tenant_id;
         $interaction_data->api_url = $session->metadata->dataCenters[0]->apiUrls[0]->host;
         $interaction_data->phone_number = '+526141287721';
